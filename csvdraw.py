@@ -7,7 +7,15 @@ import networkx as nx
 # for i in csvfile:
 #    print (i)
 
-arr=np.loadtxt("./test.csv",delimiter=";",dtype=str)
+
+def toArray(fichier):
+    arr=np.loadtxt(fichier,delimiter=";",dtype=str)
+    return arr  
+
+
+
+toArray('./test.csv')
+
 # print(arr)
 # print("l element 2 de la ligne 7 est:") 
 # print(arr[7][2])
@@ -17,22 +25,44 @@ arr=np.loadtxt("./test.csv",delimiter=";",dtype=str)
 
 #arr=np.array(sample)
 #print(arr)
+arr=toArray('./test.csv')
 
-nombreelements=len(arr)
-print("nombre d'elements:",nombreelements)
+print(arr)
+
+def construitgraphe(arr):
+
+    nombreelements=len(arr)
+    print("nombre d'elements:",nombreelements)
+
+    g = nx.DiGraph()
+
+    for i in range(nombreelements):
+        print("intégration de : ",(arr[i][0]),(arr[i][1]),(arr[i][2]))
+    #   g.add_node(arr[i][0])
+        if (bool(arr[i][2])):
+            liste_voisins=(arr[i][2]).split(',')
+            for vois in liste_voisins:
+                print("traitement de : ",arr[i][0],", ajout de : ",vois)
+                g.add_edge(vois,arr[i][0],weight=float(arr[i][1]))
+    return g
+
+g=construitgraphe(arr)
+
+# prints out the nature of our digraph: 
+print (g)
+
+# prints out the complete set of edges with their attributes
+print ("listing des edges en format brut:")
+print(g.edges.data())
+
+print ("impression du degré des edges : non pondéré")
+print(g.degree( nbunch=None, weight=None))
+
+## le tableau est maintenant constuit, on peut attaquer l'exploitation des données... mais d'abord, un petit tableau ?
 
 
 
-g = nx.DiGraph()
 
-for i in range(nombreelements):
-    print("intégration de : ",(arr[i][0]),(arr[i][1]),(arr[i][2]))
- #   g.add_node(arr[i][0])
-    if (bool(arr[i][2])):
-        liste_voisins=(arr[i][2]).split(',')
-        for vois in liste_voisins:
-            print("traitement de : ",arr[i][0],", ajout de : ",vois)
-            g.add_edge(vois,arr[i][0],weight=float(arr[i][1]))
 
 
 pos = nx.spring_layout(g,seed=13,k=1.5)  # positions for all nodes - seed for reproducibility
