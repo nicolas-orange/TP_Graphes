@@ -14,7 +14,7 @@ def toarray(fichier):
     return myarray
 
 
-toarray('./test.csv')
+# toarray('./test.csv')
 
 # print(arr)
 # print("l'élément 2 de la ligne 7 est:")
@@ -30,35 +30,91 @@ arr = toarray('./test.csv')
 
 print(arr)
 
+print("longueur du premier array : ", len(arr))
 
-def construitgraphe(array):
-    nombreelements = len(array)
+
+def flip_and_chop_array(myarray):
+    newarray = np.stack(myarray,
+                        axis=-1)  # retournement du tableau par la diagonale, les lignes deviennent les colonnes
+    # print(len(newarray)) # longueur du tableau en nbre de lignes
+    # print (newarray[3]) # affichage de la derniere ligne pour un tableau à 4 lignes (de 0 à 3)
+    # print(newarray[(len(newarray) - 1)])  # affichage de la dernière ligne d'un tableau à N entrée
+
+    # flag = np.any(newarray[(len(newarray)-1)]) # on teste si la derniere ligne est vide !!! ne marche pas !!!
+    if all(s == '' for s in (newarray[(len(newarray) - 1)])):  # si la derniere ligne ne contient que des champs vides
+        newarray = newarray[:-1]  # on supprime la dernière ligne du tableau
+    # if flag:  # si elle est vide
+
+    return newarray  # on rend le tableau
+
+
+reduced_array = flip_and_chop_array(arr)
+
+print(reduced_array)
+
+
+def construitgraphe(myarray):
+    nombreelements = len(myarray)
     print("nombre d'éléments:", nombreelements)
 
     g = nx.DiGraph()
 
     for i in range(nombreelements):
-        print("intégration de : ", (array[i][0]), (array[i][1]), (array[i][2]))
+        print("intégration de : ", (myarray[i][0]), (myarray[i][1]), (myarray[i][2]))
         #   g.add_node(arr[i][0])
-        if bool(array[i][2]):
-            liste_voisins = (array[i][2]).split(',')
+        if bool(myarray[i][2]):
+            liste_voisins = (myarray[i][2]).split(',')
             for vois in liste_voisins:
-                print("traitement de : ", array[i][0], ", ajout de : ", vois)
-                g.add_edge(vois, array[i][0], weight=float(array[i][1]))
+                print("traitement de : ", myarray[i][0], ", ajout de : ", vois)
+                g.add_edge(vois, myarray[i][0], weight=float(myarray[i][1]))
     return g
 
 
 g = construitgraphe(arr)
 
-# prints out the nature of our digraph: 
+# prints out the nature of our digraph:
 print(g)
 
 # prints out the complete set of edges with their attributes
 print("listing des edges en format brut:")
 print(g.edges.data())
 
-print("impression du degré des edges : non pondéré")
+print("impression du degré des noeuds : non pondéré")
 print(g.degree(nbunch=None, weight=None))
+
+
+def triparniveaudetaches(graphe):
+    liste_avec_nbr_noeuds = list(graphe.degree(nbunch=None, weight=None))
+    return sorted(liste_avec_nbr_noeuds, key=lambda noeud: noeud[1], reverse=True)  # sort by age
+
+
+print("Liste des noeuds par niveau de taches decroissant:")
+print(triparniveaudetaches(g))
+
+
+def triparpoidstotal(graphe):
+    liste_avec_nbr_noeuds = list(graphe.degree(nbunch=None, weight='weight'))
+    return sorted(liste_avec_nbr_noeuds, key=lambda noeud: noeud[1], reverse=True)  # sort by age
+
+
+print("Liste des noeuds par poids total decroissant:")
+print(triparpoidstotal(g))
+
+print("impression des descendants de chaque noeud")
+# list the neighbors of each node from our digraph, following directions:
+print('n', [list(g.neighbors(n)) for n in g.nodes()])
+print(list(g.adjacency()))
+
+# Compute the degree of every node: degrees
+degrees = [len(list(g.neighbors(n))) for n in g.nodes()]
+
+# Print the degrees
+print(degrees)
+'''
+def sortbynodesload(mygraph):
+    for i in range(len(mygraph)):
+    return mygraph
+'''
 
 # Le tableau est maintenant construit, on peut attaquer l'exploitation des données... mais d'abord, un petit tableau ?
 
