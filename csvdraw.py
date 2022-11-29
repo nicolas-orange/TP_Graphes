@@ -3,6 +3,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import networkx as nx
 
+import pprint
+
 
 # csvfile=open("./test.csv")
 # for i in csvfile:
@@ -34,8 +36,9 @@ print("longueur du premier array : ", len(arr))
 
 
 def flip_and_chop_array(myarray):
-    newarray = np.stack(myarray,
-                        axis=-1)  # retournement du tableau par la diagonale, les lignes deviennent les colonnes
+    # retournement du tableau par la diagonale, les lignes deviennent les colonnes
+    newarray = np.stack(myarray, axis=-1)
+
     # print(len(newarray)) # longueur du tableau en nbre de lignes
     # print (newarray[3]) # affichage de la derniere ligne pour un tableau à 4 lignes (de 0 à 3)
     # print(newarray[(len(newarray) - 1)])  # affichage de la dernière ligne d'un tableau à N entrée
@@ -83,13 +86,13 @@ print("impression du degré des noeuds : non pondéré")
 print(g.degree(nbunch=None, weight=None))
 
 
-def triparniveaudetaches(graphe):
+def triparnbreliens(graphe):
     liste_avec_nbr_noeuds = list(graphe.degree(nbunch=None, weight=None))
     return sorted(liste_avec_nbr_noeuds, key=lambda noeud: noeud[1], reverse=True)  # sort by age
 
 
-print("Liste des noeuds par niveau de taches decroissant:")
-print(triparniveaudetaches(g))
+print("Liste des noeuds par nombre d'arcs (degrés) décroissant:")
+print(triparnbreliens(g))
 
 
 def triparpoidstotal(graphe):
@@ -97,18 +100,55 @@ def triparpoidstotal(graphe):
     return sorted(liste_avec_nbr_noeuds, key=lambda noeud: noeud[1], reverse=True)  # sort by age
 
 
-print("Liste des noeuds par poids total decroissant:")
+print("Liste des noeuds par degré total (arcs pondérés) décroissant:")
 print(triparpoidstotal(g))
 
-print("impression des descendants de chaque noeud")
+print("impression des liens descendants de chaque noeud")
 # list the neighbors of each node from our digraph, following directions:
-print('n', [list(g.neighbors(n)) for n in g.nodes()])
+print("descendants de : ", [(n, ":", list(g.out_edges(n))) for n in g.nodes()])
+
+print(" impression des liens ascendants de chaque noeud ")
+print("ascendants de : ", [(n, ":", list(g.in_edges(n))) for n in g.nodes()])
+
 print(list(g.adjacency()))
+
+print("successeurs de : ", [(n, ":", list(g.successors(n))) for n in g.nodes()])
+print("prédécesseurs de: ", [(n, ":", list(g.predecessors(n))) for n in g.nodes()])
+
+print("re-affichage des nodes")
+print(g.nodes.data())
+
+
+### a revoir, boucle mal
+def calcul_niveaux(graph):  # function qui prends un graph en entrée, et rends une table de noeuds par niveau
+    n = int(0)  # niveau en cours
+    # nx.set_node_attributes(graph, '', 'niveau')
+    cherche = []
+    for n in range(3):
+        for nod in graph.nodes():
+            # print(nod[0])
+            if len(list(graph.predecessors(nod))) == 0 and nod[0] not in cherche:
+                nx.set_node_attributes(graph, {nod[0]: {"niveau": n+1}})
+                cherche.append(nod[0])
+            elif cherche in list(graph.predecessors(nod)) :
+                nx.set_node_attributes(graph, {nod[0]: {"niveau":n+1}})
+                cherche.append(nod[0])
+    print("fini")
+    return graph
+
+
+calcul_niveaux(g)
+
+print("re-affichage des nodes")
+print(g.nodes.data())
+
+# print("calcul des niveaux:", calcul_niveaux(g))
 
 # Compute the degree of every node: degrees
 degrees = [len(list(g.neighbors(n))) for n in g.nodes()]
 
 # Print the degrees
+print("affichage des degrés des noeud:")
 print(degrees)
 '''
 def sortbynodesload(mygraph):
@@ -119,17 +159,20 @@ def sortbynodesload(mygraph):
 # Le tableau est maintenant construit, on peut attaquer l'exploitation des données... mais d'abord, un petit tableau ?
 
 
-pos = nx.spring_layout(g, seed=13, k=1.5)  # positions for all nodes - seed for reproducibility
+pos = nx.spring_layout(g, seed=13, k=1.666)  # positions for all nodes - seed for reproducibility
+# pos = nx.nx_pydot.graphviz_layout(g)
 
 # nodes
 
-nx.draw_networkx_nodes(g, pos, node_size=500)
+# nx.draw_networkx_nodes(g, pos, node_size=500)
 
 # edges : the following two examples need to prepare a liste of large (elarge) and one of small (esmall) edges
 # nx.draw_networkx_edges(g, pos, edgelist=elarge, width=6)
 # nx.draw_networkx_edges(g, pos, edgelist=esmall, width=6, alpha=0.5, edge_color="b", style="dashed")
 # this one is more straightforward
 nx.draw_networkx_edges(g, pos, width=3)
+# affiche les noeuds et leur nom
+nx.draw_networkx_nodes(g, pos)
 
 # node labels
 nx.draw_networkx_labels(g, pos)
