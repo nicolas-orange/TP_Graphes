@@ -1,13 +1,10 @@
 import copy
-from typing import Dict
 
-import numpy as np
 # import csv
 import matplotlib.pyplot as plt
 import networkx as nx
-import array
-
-import pprint
+import numpy as np
+from networkx import DiGraph
 
 
 # csvfile=open("./test.csv")
@@ -82,30 +79,30 @@ def construitgraphe(myarray):
     nombreelements = len(myarray)
     print("nombre d'éléments:", nombreelements)
 
-    g = nx.DiGraph()
+    graph: DiGraph = nx.DiGraph()
 
     for i in range(nombreelements):
         print("intégration de : ", (myarray[i][0]), (myarray[i][1]), (myarray[i][2]))
-        g.add_node(myarray[i][0], weight=float(myarray[i][1]))
+        graph.add_node(myarray[i][0], weight=float(myarray[i][1]))
         if bool(myarray[i][2]):
             liste_voisins = (myarray[i][2]).split(',')
             for vois in liste_voisins:
                 print("traitement de : ", myarray[i][0], ", ajout de : ", vois)
-                g.add_edge(vois, myarray[i][0])
-    return g
+                graph.add_edge(vois, myarray[i][0])
+    return graph
 
 
-g = construitgraphe(arr)
+G: DiGraph = construitgraphe(arr)
 
 # prints out the nature of our digraph:
-print(g)
+print(G)
 
 # prints out the complete set of edges with their attributes
 print("listing des edges en format brut:")
-print(g.edges.data())
+print(G.edges.data())
 
 print("impression du degré des noeuds : non pondéré")
-print(g.degree(nbunch=None, weight=None))
+print(G.degree(nbunch=None, weight=None))
 
 
 def triparnbreliens(graphe):
@@ -114,39 +111,38 @@ def triparnbreliens(graphe):
 
 
 print("Liste des noeuds par nombre d'arcs (degrés) décroissant:")
-print(triparnbreliens(g))
+print(triparnbreliens(G))
 
 
 def triparpoidstotal(graphe):
     liste_avec_nbr_noeuds = list(graphe.degree(nbunch=None, weight='weight'))
-    return sorted(liste_avec_nbr_noeuds, key=lambda noeud: noeud[1], reverse=True)  # sort by age
+    return sorted(liste_avec_nbr_noeuds, key=lambda noeud: noeud[1], reverse=True)  # sort by degree
 
 
 print("Liste des noeuds par degré total (arcs pondérés) décroissant:")
-print(triparpoidstotal(g))
+print(triparpoidstotal(G))
 
 print("impression des liens descendants de chaque noeud")
 # list the neighbors of each node from our digraph, following directions:
-print("descendants de : ", [(n, ":", list(g.out_edges(n))) for n in g.nodes()])
+print("descendants de : ", [(n, ":", list(G.out_edges(n))) for n in G.nodes()])
 
 print(" impression des liens ascendants de chaque noeud ")
-print("ascendants de : ", [(n, ":", list(g.in_edges(n))) for n in g.nodes()])
+print("ascendants de : ", [(n, ":", list(G.in_edges(n))) for n in G.nodes()])
 
-print(list(g.adjacency()))
+print(list(G.adjacency()))
 
-print("successeurs de : ", [(n, ":", list(g.successors(n))) for n in g.nodes()])
-print("prédécesseurs de: ", [(n, ":", list(g.predecessors(n))) for n in g.nodes()])
+print("successeurs de : ", [(n, ":", list(G.successors(n))) for n in G.nodes()])
+print("prédécesseurs de: ", [(n, ":", list(G.predecessors(n))) for n in G.nodes()])
 
 print("re-affichage des nodes")
-print(g.nodes.data())
+print(G.nodes.data())
 
 
-### a revoir, boucle mal
-def calcul_niveaux(graph):  # function qui prends un graph en entrée, et rends une table de noeuds par niveau
-    n = int(0)  # niveau en cours
+# a revoir, boucle mal
+def calcul_niveaux(graph):  # function qui prend un graph en entrée et rend une table de noeuds par niveau
     # nx.set_node_attributes(graph, '', 'niveau')
     cherche = []
-    for n in range(3):
+    for n in range(3):  # on parcourt les différents niveaux
         for nod in graph.nodes():
             # print(nod[0])
             if len(list(graph.predecessors(nod))) == 0 and nod[0] not in cherche:
@@ -159,18 +155,18 @@ def calcul_niveaux(graph):  # function qui prends un graph en entrée, et rends 
     return graph
 
 
-calcul_niveaux(g)
+calcul_niveaux(G)
 
 print("re-affichage des nodes")
-print(g.nodes.data())
+print(G.nodes.data())
 
 print("re-affichage des noms et des poids des nodes")
-print(nx.get_node_attributes(g, 'weight'))
+print(nx.get_node_attributes(G, 'weight'))
 
 # print("calcul des niveaux:", calcul_niveaux(g))
 
 # Compute the degree of every node: degrees
-degrees = [len(list(g.neighbors(n))) for n in g.nodes()]
+degrees = [len(list(G.neighbors(n))) for n in G.nodes()]
 
 # Print the degrees
 print("affichage des degrés des noeud:")
@@ -186,7 +182,9 @@ def sortbynodesload(mygraph):
 
 # nodes
 # node label and colors definition
-labels = {nod: g.nodes[nod]['weight'] for nod in g.nodes}
+labels = {nod: G.nodes[nod]['weight'] for nod in G.nodes}
+
+
 # colors = [g.nodes[nod]['weight'] for nod in g.nodes]
 
 # pos = nx.spring_layout(g, seed=13, k=1.666)  # positions for all nodes - seed for reproducibility
@@ -200,15 +198,35 @@ labels = {nod: g.nodes[nod]['weight'] for nod in g.nodes}
 # nx.draw_networkx_edges(g, pos, edgelist=esmall, width=6, alpha=0.5, edge_color="b", style="dashed")
 # pos=nx.spring_layout(g, seed=13, k=1.666)
 
+def ajoutlayers(graph):
+    for layer, nodes in enumerate(nx.topological_generations(graph)):
+        # `multipartite_layout` expects the layer as a node attribute, so add the
+        # numeric layer value as a node attribute
+        for node in nodes:
+            graph.nodes[node]["layer"] = layer
+    return graph
 
-for layer, nodes in enumerate(nx.topological_generations(g)):
-    # `multipartite_layout` expects the layer as a node attribute, so add the
-    # numeric layer value as a node attribute
-    for node in nodes:
-        g.nodes[node]["layer"] = layer
+
+ajoutlayers(G)
+
+def ajoutdebutfin(graph):
+    graph.add_node('Debut')
+    graph.add_edge('Debut',nodnam) for nodnam in list(graph.nodes.keys)
+
+    return graph
 
 # Compute the multipartite_layout using the "layer" node attribute
-pos = nx.multipartite_layout(g, subset_key="layer")
+pos = nx.multipartite_layout(G, subset_key="layer")
+
+# ajoutlayers(G)
+# Compute the multipartite_layout using the "layer" node attribute
+pos = nx.multipartite_layout(G, subset_key="layer")
+
+print("calcul des layers avec la fonction topological_generations")
+print(list(nx.topological_generations(G)))
+
+print("comparaison avec la fonction bfs_layers : ")
+print(list(enumerate(nx.bfs_layers(G, ['A', 'B', 'C']))))
 
 # this one is more straightforward
 
@@ -235,7 +253,7 @@ for px in list(newpos):
     # print(px[1][0])
     # print(px[1][1])
     # newpos[px][0] = newpos[px][0] -0.1
-    newpos[px][1] = newpos[px][1]+0.1
+    newpos[px][1] = newpos[px][1] + 0.1
 
 print("liste des positions: ")
 print(list(pos.items()))
@@ -246,14 +264,14 @@ print("nouvelle liste de positions: ")
 print(list(newpos.items()))
 
 # on dessine les noeuds et les arcs:
-nx.draw_networkx_nodes(g, pos=pos)
-nx.draw_networkx_edges(g, pos=pos, width=3)
+nx.draw_networkx_nodes(G, pos=pos)
+nx.draw_networkx_edges(G, pos=pos, width=3)
 # on dessine les labels :
-nx.draw_networkx_labels(g, pos=pos, horizontalalignment='center')
+nx.draw_networkx_labels(G, pos=pos, horizontalalignment='center')
 
 # modification de la position entre deux affichages :
 
-nx.draw_networkx_labels(g, pos=newpos, labels=labels, verticalalignment='bottom')
+nx.draw_networkx_labels(G, pos=newpos, labels=labels, verticalalignment='bottom')
 
 # nx.draw_networkx_edge_labels(g, pos=pos)
 
