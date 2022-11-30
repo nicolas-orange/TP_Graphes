@@ -1,7 +1,11 @@
+import copy
+from typing import Dict
+
 import numpy as np
 # import csv
 import matplotlib.pyplot as plt
 import networkx as nx
+import array
 
 import pprint
 
@@ -55,7 +59,7 @@ reduced_array = flip_and_chop_array(arr)
 
 print(reduced_array)
 
-
+'''
 def construitgraphe(myarray):
     nombreelements = len(myarray)
     print("nombre d'éléments:", nombreelements)
@@ -70,6 +74,24 @@ def construitgraphe(myarray):
             for vois in liste_voisins:
                 print("traitement de : ", myarray[i][0], ", ajout de : ", vois)
                 g.add_edge(vois, myarray[i][0], weight=float(myarray[i][1]))
+    return g
+'''
+
+
+def construitgraphe(myarray):
+    nombreelements = len(myarray)
+    print("nombre d'éléments:", nombreelements)
+
+    g = nx.DiGraph()
+
+    for i in range(nombreelements):
+        print("intégration de : ", (myarray[i][0]), (myarray[i][1]), (myarray[i][2]))
+        g.add_node(myarray[i][0], weight=float(myarray[i][1]))
+        if bool(myarray[i][2]):
+            liste_voisins = (myarray[i][2]).split(',')
+            for vois in liste_voisins:
+                print("traitement de : ", myarray[i][0], ", ajout de : ", vois)
+                g.add_edge(vois, myarray[i][0])
     return g
 
 
@@ -128,10 +150,10 @@ def calcul_niveaux(graph):  # function qui prends un graph en entrée, et rends 
         for nod in graph.nodes():
             # print(nod[0])
             if len(list(graph.predecessors(nod))) == 0 and nod[0] not in cherche:
-                nx.set_node_attributes(graph, {nod[0]: {"niveau": n+1}})
+                nx.set_node_attributes(graph, {nod[0]: {"niveau": n + 1}})
                 cherche.append(nod[0])
-            elif cherche in list(graph.predecessors(nod)) :
-                nx.set_node_attributes(graph, {nod[0]: {"niveau":n+1}})
+            elif cherche in list(graph.predecessors(nod)):
+                nx.set_node_attributes(graph, {nod[0]: {"niveau": n + 1}})
                 cherche.append(nod[0])
     print("fini")
     return graph
@@ -141,6 +163,9 @@ calcul_niveaux(g)
 
 print("re-affichage des nodes")
 print(g.nodes.data())
+
+print("re-affichage des noms et des poids des nodes")
+print(nx.get_node_attributes(g, 'weight'))
 
 # print("calcul des niveaux:", calcul_niveaux(g))
 
@@ -159,32 +184,83 @@ def sortbynodesload(mygraph):
 # Le tableau est maintenant construit, on peut attaquer l'exploitation des données... mais d'abord, un petit tableau ?
 
 
-pos = nx.spring_layout(g, seed=13, k=1.666)  # positions for all nodes - seed for reproducibility
+# nodes
+# node label and colors definition
+labels = {nod: g.nodes[nod]['weight'] for nod in g.nodes}
+# colors = [g.nodes[nod]['weight'] for nod in g.nodes]
+
+# pos = nx.spring_layout(g, seed=13, k=1.666)  # positions for all nodes - seed for reproducibility
 # pos = nx.nx_pydot.graphviz_layout(g)
 
-# nodes
 
 # nx.draw_networkx_nodes(g, pos, node_size=500)
 
 # edges : the following two examples need to prepare a liste of large (elarge) and one of small (esmall) edges
 # nx.draw_networkx_edges(g, pos, edgelist=elarge, width=6)
 # nx.draw_networkx_edges(g, pos, edgelist=esmall, width=6, alpha=0.5, edge_color="b", style="dashed")
+# pos=nx.spring_layout(g, seed=13, k=1.666)
+
+
+for layer, nodes in enumerate(nx.topological_generations(g)):
+    # `multipartite_layout` expects the layer as a node attribute, so add the
+    # numeric layer value as a node attribute
+    for node in nodes:
+        g.nodes[node]["layer"] = layer
+
+# Compute the multipartite_layout using the "layer" node attribute
+pos = nx.multipartite_layout(g, subset_key="layer")
+
 # this one is more straightforward
-nx.draw_networkx_edges(g, pos, width=3)
+
 # affiche les noeuds et leur nom
-nx.draw_networkx_nodes(g, pos)
+# nx.draw_networkx_nodes(g, with_labels=True, labels=labels, node_color=colors)
 
 # node labels
-nx.draw_networkx_labels(g, pos)
+# nx.draw_networkx_labels(g, pos)
+
 # edge weight labels
-edge_labels = nx.get_edge_attributes(g, "weight")
+# edge_labels = nx.get_edge_attributes(g, "weight")
 # edge_labels = nx.draw_networkx_labels(g,pos=nx.spring_layout(g))
-nx.draw_networkx_edge_labels(g, pos, edge_labels)
+# nx.draw_networkx_edge_labels(g, pos, edge_labels)
+# nx.draw_networkx_edge_labels(g, edge_labels)
 
-# nx.draw_spring(g,with_labels = True)
+# print("liste des positions: ")
+# print(list(pos.items()))
+# Décalage des positions des labels des nodes prrrrrr
+newpos = copy.deepcopy(pos)
 
-ax = plt.gca()
-ax.margins(0.08)
+for px in list(newpos):
+    # print(px)
+    # print(newpos[px])
+    # print(px[1][0])
+    # print(px[1][1])
+    # newpos[px][0] = newpos[px][0] -0.1
+    newpos[px][1] = newpos[px][1]+0.1
+
+print("liste des positions: ")
+print(list(pos.items()))
+
+print("type de pos:")
+print(type(pos))
+print("nouvelle liste de positions: ")
+print(list(newpos.items()))
+
+# on dessine les noeuds et les arcs:
+nx.draw_networkx_nodes(g, pos=pos)
+nx.draw_networkx_edges(g, pos=pos, width=3)
+# on dessine les labels :
+nx.draw_networkx_labels(g, pos=pos, horizontalalignment='center')
+
+# modification de la position entre deux affichages :
+
+nx.draw_networkx_labels(g, pos=newpos, labels=labels, verticalalignment='bottom')
+
+# nx.draw_networkx_edge_labels(g, pos=pos)
+
+
+# preparation de l'affichage secondaire ordonné:
+# ax = plt.subplots()
+# ax.margins(0.08)
 plt.axis("off")
 plt.tight_layout()
 plt.show()
