@@ -209,11 +209,23 @@ def ajoutlayers(graph):
 
 ajoutlayers(G)
 
-def ajoutdebutfin(graph):
-    graph.add_node('Debut')
-    graph.add_edge('Debut',nodnam) for nodnam in list(graph.nodes.keys)
 
+def ajoutdebutfin(graph):
+    graph.add_node('Debut', weight=0, layer=-1)
+    # highest_layer
+    graph.add_node('Fin', weight=0, layer=4)
+
+    # selection d'un arc contenant un noeud :
+    selected_edges = [(u, v, e) for u, v, e in G.edges(data=True) if 'D' in (u,v)]
+    print("affichage des arcs contenant 'D' :")
+    print(selected_edges)
+
+    # nodnam = [G.nodes[nod][0] for nod in G.nodes.keys()]
+    # print (nodnam)
     return graph
+
+
+ajoutdebutfin(G)
 
 # Compute the multipartite_layout using the "layer" node attribute
 pos = nx.multipartite_layout(G, subset_key="layer")
@@ -253,7 +265,7 @@ for px in list(newpos):
     # print(px[1][0])
     # print(px[1][1])
     # newpos[px][0] = newpos[px][0] -0.1
-    newpos[px][1] = newpos[px][1] + 0.1
+    newpos[px][1] = newpos[px][1] + 0.05
 
 print("liste des positions: ")
 print(list(pos.items()))
