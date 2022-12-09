@@ -270,16 +270,18 @@ def calculdateauplustot(graph):
           graph.nodes[nod]['dateauplustot'] = cheminmax
           # print("dateauplustot de : ", nod, ": ", dateauplustot[nod])
 
-  return dateauplustot
+  return graph
 
 
-print("liste des dates au plus tot : ", calculdateauplustot(g))
+calculdateauplustot(g)
 
 
 def calculdateauplustard(graph):
   listesuccesseurs = []
   dateauplustard = {}
-  dateauplustard['fin'] = calculdateauplustot(graph)['fin']
+  # dateauplustard['fin'] = calculdateauplustot(graph)['fin']
+  dateauplustard['fin'] = (g.nodes['fin']['dateauplustot'])
+  graph.nodes['fin']['dateauplustard'] = g.nodes['fin']['dateauplustot']
   print("date au plus tot fin = date au plus tard = ", dateauplustard['fin'])
 
   while len(dateauplustard) < len(graph):
@@ -296,15 +298,34 @@ def calculdateauplustard(graph):
         if traite:  # on n'inscrit la valeur du nœud dans la table que si on a traité tous ses predecesseurs !
           dateauplustard[nod] = mindepuisfin
           graph.nodes[nod]['dateauplustard'] = mindepuisfin
+          # print (graph.nodes[nod]['dateauplustard'])
           # print("dateauplustard de : ", nod, ": ", dateauplustard[nod])
-  return dateauplustard
+  return graph
+
+calculdateauplustard(g)
+
+def calculmarges(graph):
+  for nod in g.nodes():
+    graph.nodes[nod]['margedate'] = (graph.nodes[nod]['dateauplustard']- graph.nodes[nod]['dateauplustot'])
+  return graph
+
+calculmarges(g)
+
+listemarges= [(node, g.nodes[node]['dateauplustot'],g.nodes[node]['dateauplustard'],g.nodes[node]['margedate']) for node in g.nodes()]
+print (listemarges)
 
 
-print("affichage de la liste des dates au plus tard:", calculdateauplustard(g))
+# print(list(g.nodes()))
+
+# listedates= [(node, g.nodes[node]['dateauplustard']) for node in g.nodes()]
+# print (listedates)
+
+
+# print("Affichage des dates au plus tot et date au plus tard du graphe", listedate)
 
 ###################################PARTIE AFFICHAGE################################
 
-# décalage du calcul des positions
+# calcul des positions en utilisant le layer multi
 pos = nx.multipartite_layout(g, subset_key="layer")
 # this one is more straightforward
 
@@ -333,13 +354,10 @@ for px in list(newpos):
   # newpos[px][0] = newpos[px][0] -0.1
   newpos[px][1] = newpos[px][1] + 0.05
 
-print("liste des positions: ")
-print(list(pos.items()))
+# print("liste des positions: ", list(pos.items()))
 
-print("type de pos:")
-print(type(pos))
-print("nouvelle liste de positions: ")
-print(list(newpos.items()))
+# print("type de pos:", type(pos))
+# print("nouvelle liste de positions: ",list(newpos.items()))
 
 # on dessine les noeuds et les arcs:
 nx.draw_networkx_nodes(g, pos=pos)
@@ -357,8 +375,8 @@ nx.draw_networkx_labels(g, pos=newpos, labels=labels)
 # preparation de l'affichage secondaire ordonné:
 # ax = plt.subplots()
 # ax.margins(0.08)
-plt.axis("off")
-plt.tight_layout()
+plt.axis("on")
+# plt.tight_layout()
 plt.show()
 
 '''
