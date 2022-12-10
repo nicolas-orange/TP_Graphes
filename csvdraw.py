@@ -1,5 +1,5 @@
 import copy
-from typing import Dict
+# from typing import Dict
 
 import numpy as np
 # import csv
@@ -36,7 +36,7 @@ def toarray(fichier):
 
 # TODO : demander le nom du fichier à parser
 
-arr = toarray('./test.csv')
+arr = toarray('./ex3.csv')
 
 
 # print(arr)
@@ -192,10 +192,10 @@ for layer, nodes in enumerate(nx.topological_generations(g)):
 '''
 
 
-def nombredeniveaux(graph):
+def niveaumax(graph):
   maxlayer = 1
   # for layer in g.nodes.data('layer'): # ajout d'un début et d'une fin ...
-  listlayer = [(g.nodes[node]['layer']) for node in g.nodes()]
+  listlayer = [(graph.nodes[node]['layer']) for node in graph.nodes()]
   # print("liste des niveaux des noeuds : ", listlayer)
   maxlayer = max(listlayer)
   return maxlayer
@@ -204,28 +204,27 @@ def nombredeniveaux(graph):
 # ajout des nodes début et fin :
 # ajout d'un début et d'une fin ...
 
-print("nombre de niveaux de g : ", nombredeniveaux(g) + 1)
-nbreniveauxgraphinitial = nombredeniveaux(g)
-
-g.add_node('debut', layer=-1, weight=0)
-g.add_node('fin', layer=nombredeniveaux(g) + 1, weight=0)
+print("nombre de niveaux de g : ", niveaumax(g) + 1)
+nbreniveauxgraphinitial = niveaumax(g)
 
 
 # TODO afficher debut et fin avec une couleur différente
 
-def relierdebutfin(graph, nbrniv):
+def creerdebutfin(graph):
+  noeudssanssucc = [nod for nod in g.nodes if not list(graph.successors(nod))]
+  # print(list(noeudssanssucc))
+  graph.add_node('debut', layer=-1, weight=0)
+  graph.add_node('fin', layer=niveaumax(graph) + 1, weight=0)
+
   for node in graph.nodes():
-    # listeniveaux = (node, g.nodes[node]['layer'])
-    # print("liste des niveaux pour tous les noeuds : ", listeniveaux)
     if graph.nodes[node]['layer'] == 0:
       graph.add_edge('debut', node)
-    elif graph.nodes[node]['layer'] == nbrniv:
-      graph.add_edge(node, 'fin')
-
+  for lastnode in noeudssanssucc:
+    graph.add_edge(lastnode, 'fin')
   return graph
 
 
-relierdebutfin(g, nbreniveauxgraphinitial)
+creerdebutfin(g)
 
 
 # print("affichage des nodes avec ajout des liens debut fin : ", g.edges())
@@ -280,8 +279,8 @@ def calculdateauplustard(graph):
   listesuccesseurs = []
   dateauplustard = {}
   # dateauplustard['fin'] = calculdateauplustot(graph)['fin']
-  dateauplustard['fin'] = (g.nodes['fin']['dateauplustot'])
-  graph.nodes['fin']['dateauplustard'] = g.nodes['fin']['dateauplustot']
+  dateauplustard['fin'] = (graph.nodes['fin']['dateauplustot'])
+  graph.nodes['fin']['dateauplustard'] = graph.nodes['fin']['dateauplustot']
   print("date au plus tot fin = date au plus tard = ", dateauplustard['fin'])
 
   while len(dateauplustard) < len(graph):
@@ -302,18 +301,46 @@ def calculdateauplustard(graph):
           # print("dateauplustard de : ", nod, ": ", dateauplustard[nod])
   return graph
 
+
 calculdateauplustard(g)
+
 
 def calculmarges(graph):
   for nod in g.nodes():
-    graph.nodes[nod]['margedate'] = (graph.nodes[nod]['dateauplustard']- graph.nodes[nod]['dateauplustot'])
+    graph.nodes[nod]['margedate'] = (graph.nodes[nod]['dateauplustard'] - graph.nodes[nod]['dateauplustot'])
   return graph
+
 
 calculmarges(g)
 
-listemarges= [(node, g.nodes[node]['dateauplustot'],g.nodes[node]['dateauplustard'],g.nodes[node]['margedate']) for node in g.nodes()]
-print (listemarges)
+listemarges = [(node, g.nodes[node]['dateauplustot'], g.nodes[node]['dateauplustard'], g.nodes[node]['margedate']) for
+               node in g.nodes()]
+print("liste des marges des noeuds: ", listemarges)
+# print(g.nodes['A']['layer'])
+print("affichage des noeud par layer :", sorted(g.nodes.data('layer'), key=lambda layer: layer[1]))
+# print(nx.get_node_attributes(g,'layer')['A'])
 
+
+cheminecritique = []
+
+
+### PARCOURS d'un dict g par double index node et layer, trié par le deuxieme champs de l'attribut 'layer'
+# for nodename, layer in sorted(g.nodes.data('layer'), key=lambda layer: layer[1]):
+#   print(nodename)
+
+
+def calculchemincritique(graph, listecritique):
+  for node, layer in sorted(g.nodes.data('layer'), key=lambda layer: layer[1]):
+    if graph.nodes[node]['margedate'] == 0:
+      graph.nodes[node]['critique'] = True
+      listecritique.append(node)
+    #   listecritique.append()
+  return graph, listecritique
+
+
+calculchemincritique(g, cheminecritique)
+
+print("noeuds éligibles au chemin critique :", cheminecritique)
 
 # print(list(g.nodes()))
 
@@ -369,16 +396,69 @@ nx.draw_networkx_labels(g, pos=pos, horizontalalignment='center')
 
 nx.draw_networkx_labels(g, pos=newpos, labels=labels)
 
+
 # nx.draw_networkx_edge_labels(g, pos=pos)
+
+# print(sorted(g.nodes.data('dateauplustot'), key=lambda date: date[1]))
+# for nodename, layer in sorted(g.nodes.data('layer'), key=lambda layer: layer[1]):
+
+def make_gantt_chart(graph):
+  fig, pltax = plt.subplots()
+  noeudsordre = {}
+  findetache = {}
+  durees = {}
+  marges = {}
+  demarrage = graph.nodes.data('dateauplustot')
+  for node in dict(sorted(graph.nodes.data('dateauplustot'), key=lambda date: date[1])):
+    if ('fin' not in node) and ('debut' not in node):
+      noeudsordre[node] = graph.nodes[node]['dateauplustot']
+  for node in dict(graph.nodes.data()):
+    findetache[node] = graph.nodes[node]['weight'] + graph.nodes[node]['dateauplustot']
+  for node in dict(graph.nodes.data()):
+    durees[node] = graph.nodes[node]['weight']
+  for node in dict(graph.nodes.data()):
+    marges[node] = graph.nodes[node]['margedate']
+
+  y_start = 10
+  y_height = 5
+  for noeud in noeudsordre:
+    if graph.nodes[noeud]['margedate'] == 0:
+      pltax.broken_barh([(demarrage[noeud], durees[noeud])], (y_start, y_height), facecolors='green')
+    else:
+      pltax.broken_barh([(demarrage[noeud], durees[noeud])], (y_start, y_height), facecolors='blue')
+    pltax.broken_barh([(findetache[noeud], marges[noeud])], (y_start, y_height), facecolors='red')
+    pltax.text(findetache[noeud] + marges[noeud] + 0.5, y_start + y_height / 2, noeud)
+    y_start += 10
+  pltax.set_xlim(0, max(findetache.values()) + 5)
+  pltax.set_ylim(len(durees) * 10)
+  pltax.set_xlabel('Temps')
+  pltax.set_ylabel('Taches')
+  i = 5
+  y_ticks = []
+  y_ticklabels = []
+  while i < len(durees) * 10:
+    y_ticks.append(i)
+    i += 10
+  pltax.set_yticks(y_ticks)
+  plt.title('Diagramme de Gantt, en escalier ', size=18)
+  plt.tick_params(
+    axis='y',  # changes apply to the y-axis
+    which='both',  # both major and minor ticks are affected
+    left='off',  # ticks along the left edge are off
+    labelleft='off')  # labels along the left edge are off
+  #
 
 
 # preparation de l'affichage secondaire ordonné:
 # ax = plt.subplots()
 # ax.margins(0.08)
-plt.axis("on")
+# plt.axis("on")
 # plt.tight_layout()
-plt.show()
 
+
+make_gantt_chart(g)
+
+plt.show()
 '''
 
 shrtpath = nx.shortest_path(g, source='debut', target='fin')
