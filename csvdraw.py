@@ -410,7 +410,7 @@ def make_gantt_chart(graph):
   fig, pltax = plt.subplots()
   noeudsordre = {}
   findetache = {}
-  durees = {}
+  duree = {}
   marges = {}
   demarrage = graph.nodes.data('dateauplustot')
   for node in dict(sorted(graph.nodes.data('dateauplustot'), key=lambda date: date[1])):
@@ -419,25 +419,27 @@ def make_gantt_chart(graph):
   for node in dict(graph.nodes.data()):
     findetache[node] = graph.nodes[node]['weight'] + graph.nodes[node]['dateauplustot']
   for node in dict(graph.nodes.data()):
-    durees[node] = graph.nodes[node]['weight']
+    duree[node] = graph.nodes[node]['weight']
   for node in dict(graph.nodes.data()):
     marges[node] = graph.nodes[node]['margedate']
-
-  y_start = 12.5
-  y_height = 5
+  y_chemincritique=1
+  y_start = 11
+  y_height = 8
   for noeud in noeudsordre:
     if graph.nodes[noeud]['margedate'] == 0:
 
-      pltax.broken_barh([(demarrage[noeud], durees[noeud])], (y_start, y_height), facecolors='green')
+      pltax.broken_barh([(demarrage[noeud], duree[noeud])], (y_start, y_height), facecolors='lime')
 
     else:
 
-      pltax.broken_barh([(demarrage[noeud], durees[noeud])], (y_start, y_height), facecolors='blue')
-    pltax.broken_barh([(findetache[noeud], marges[noeud])], (y_start, y_height), facecolors='red')
-    pltax.text(findetache[noeud] + marges[noeud] + 0.5, y_start + y_height, noeud)
+      pltax.broken_barh([(demarrage[noeud], duree[noeud])], (y_start, y_height), facecolors='cyan')
+      pltax.broken_barh([(findetache[noeud], marges[noeud])], (y_start, y_height), facecolors='red')
+    # pltax.text(findetache[noeud] + marges[noeud] + 0.5, y_start + y_height, noeud)
+
+    pltax.text(demarrage[noeud]+(duree[noeud])/2, y_start + (y_height/2) + 1 , noeud)
     y_start += 10
   pltax.set_xlim(0, max(findetache.values()) + 5)
-  pltax.set_ylim(len(durees) * 10)
+  pltax.set_ylim(len(duree) * 10)
   pltax.set_xlabel('Temps')
   pltax.set_ylabel('Taches')
   i = 5
@@ -448,7 +450,7 @@ def make_gantt_chart(graph):
   #while i < len(noeudsordre) * 10:
   #  y_ticks.append(i)
   #  i += 10
-  for i in range (len(noeudsordre) ):
+  for i in range (len(noeudsordre)):
     y_ticks.append(i*10)
     i += 1
 
