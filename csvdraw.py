@@ -35,8 +35,12 @@ def toarray(fichier):
 # print(arr)
 
 # TODO : demander le nom du fichier à parser
+#read string from user
+fichier = input('Entrez le fichier à parser : (default test.csv)')
+if 'csv' not in fichier:
+  fichier='test.csv'
 
-arr = toarray('./ex3.csv')
+arr = toarray(fichier)
 
 
 # print(arr)
@@ -419,15 +423,18 @@ def make_gantt_chart(graph):
   for node in dict(graph.nodes.data()):
     marges[node] = graph.nodes[node]['margedate']
 
-  y_start = 10
+  y_start = 12.5
   y_height = 5
   for noeud in noeudsordre:
     if graph.nodes[noeud]['margedate'] == 0:
+
       pltax.broken_barh([(demarrage[noeud], durees[noeud])], (y_start, y_height), facecolors='green')
+
     else:
+
       pltax.broken_barh([(demarrage[noeud], durees[noeud])], (y_start, y_height), facecolors='blue')
     pltax.broken_barh([(findetache[noeud], marges[noeud])], (y_start, y_height), facecolors='red')
-    pltax.text(findetache[noeud] + marges[noeud] + 0.5, y_start + y_height / 2, noeud)
+    pltax.text(findetache[noeud] + marges[noeud] + 0.5, y_start + y_height, noeud)
     y_start += 10
   pltax.set_xlim(0, max(findetache.values()) + 5)
   pltax.set_ylim(len(durees) * 10)
@@ -435,11 +442,18 @@ def make_gantt_chart(graph):
   pltax.set_ylabel('Taches')
   i = 5
   y_ticks = []
-  y_ticklabels = []
-  while i < len(durees) * 10:
-    y_ticks.append(i)
-    i += 10
+  y_labels = []
+  for node in noeudsordre:
+    y_labels.append(node[0])
+  #while i < len(noeudsordre) * 10:
+  #  y_ticks.append(i)
+  #  i += 10
+  for i in range (len(noeudsordre) ):
+    y_ticks.append(i*10)
+    i += 1
+
   pltax.set_yticks(y_ticks)
+  pltax.set_yticklabels([])
   plt.title('Diagramme de Gantt, en escalier ', size=18)
   plt.tick_params(
     axis='y',  # changes apply to the y-axis
