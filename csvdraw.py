@@ -168,24 +168,25 @@ def graphelvl(graphe):
   nodelayer = []
   while len(list(nodelayer)) < len(graphe.nodes):
     for node in graphe.nodes:
-      traite=True
-      if not list(graphe.predecessors(node)):
-        graphe.nodes[node]['layer'] = 0
-        nodelayer.append(node)
-      else:
-        max = 0
-        for predecessor in graphe.predecessors(node):
-          if graphe.nodes[predecessor]['layer'] < 0:
-            traite=False
-          else:
-            predecessorlvl = int(graphe.nodes[predecessor]['layer'])
-            if predecessorlvl > max :
-              max = predecessorlvl
-              traite=traite&True
-        if traite:
-          graphe.nodes[node]['layer'] = max + 1
+      if node not in nodelayer:
+        if not list(graphe.predecessors(node)):
+          graphe.nodes[node]['layer'] = 0
           nodelayer.append(node)
-          
+        else:
+          max = 0
+          traite = True
+          for predecessor in graphe.predecessors(node):
+            if graphe.nodes[predecessor]['layer'] < 0:
+              traite=False
+            else:
+              predecessorlvl = int(graphe.nodes[predecessor]['layer'])
+              if predecessorlvl > max :
+                max = predecessorlvl
+                traite=traite&True
+          if traite:
+            graphe.nodes[node]['layer'] = max + 1
+            nodelayer.append(node)
+            
   return graphe
 
 
@@ -457,7 +458,7 @@ def make_gantt_chart(graph):
   #while i < len(noeudsordre) * 10:
   #  y_ticks.append(i)
   #  i += 10
-  for i in range (len(noeudsordre)):
+  for i in range (len(noeudsordre)+2):
     y_ticks.append(i*10)
     i += 1
 
@@ -465,7 +466,7 @@ def make_gantt_chart(graph):
   pltax.set_yticklabels([])
   plt.title('Diagramme de Gantt, en escalier ', size=18)
   plt.tick_params(
-    axis='y',  # changes apply to the y-axis
+    axis='both',  # changes apply to the y-axis
     which='both',  # both major and minor ticks are affected
     left='off',  # ticks along the left edge are off
     labelleft='off')  # labels along the left edge are off
