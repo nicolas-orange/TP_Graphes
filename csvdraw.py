@@ -21,6 +21,7 @@ def toarray(fichier):
   myarray = np.loadtxt(fichier, delimiter=";", dtype=str)
   return myarray
 
+
 # toarray('./test.csv')
 
 # print(arr)
@@ -34,10 +35,10 @@ def toarray(fichier):
 # print(arr)
 
 # TODO : demander le nom du fichier à parser
-#read string from user
+# read string from user
 fichier = input('Entrez le fichier à parser : (default test.csv)')
 if 'csv' not in fichier:
-  fichier='test.csv'
+  fichier = 'test.csv'
 
 arr = toarray(fichier)
 
@@ -50,16 +51,16 @@ arr = toarray(fichier)
 def flip_and_chop_array(myarray):
   # retournement du tableau par la diagonale, les lignes deviennent les colonnes
   newarray = np.stack(myarray, axis=-1)
-
+  
   # print(len(newarray)) # longueur du tableau en nbre de lignes
   # print (newarray[3]) # affichage de la derniere ligne pour un tableau à 4 lignes (de 0 à 3)
   # print(newarray[(len(newarray) - 1)])  # affichage de la dernière ligne d'un tableau à N entrée
-
+  
   # flag = np.any(newarray[(len(newarray)-1)]) # on teste si la derniere ligne est vide !!! ne marche pas !!!
   if all(s == '' for s in (newarray[(len(newarray) - 1)])):  # si la derniere ligne ne contient que des champs vides
     newarray = newarray[:-1]  # on supprime la dernière ligne du tableau
   # if flag:  # si elle est vide
-
+  
   return newarray  # on rend le tableau
 
 
@@ -71,7 +72,7 @@ def flip_and_chop_array(myarray):
 def construitgraphe(myarray):
   nombreelements = len(myarray)
   print("nombre d'éléments:", nombreelements)
-
+  
   for i in range(nombreelements):
     # print("intégration de : ", (myarray[i][0]), (myarray[i][1]), (myarray[i][2]))
     g.add_node(myarray[i][0], weight=float(myarray[i][1]))
@@ -81,6 +82,7 @@ def construitgraphe(myarray):
         # print("traitement de : ", myarray[i][0], ", ajout de : ", vois)
         g.add_edge(vois, myarray[i][0])
   return g
+
 
 g = nx.DiGraph()
 g = construitgraphe(arr)
@@ -145,7 +147,6 @@ def triparpoidstotal(graphe):
 # node label and colors definition
 
 
-
 # colors = [g.nodes[nod]['weight'] for nod in g.nodes]
 
 # pos = nx.spring_layout(g, seed=13, k=1.666)  # positions for all nodes - seed for reproducibility
@@ -164,7 +165,7 @@ def triparpoidstotal(graphe):
 
 def graphelvl(graphe):
   for node in graphe.nodes:
-    graphe.nodes[node]['layer']=-1
+    graphe.nodes[node]['layer'] = -1
   nodelayer = []
   while len(list(nodelayer)) < len(graphe.nodes):
     for node in graphe.nodes:
@@ -177,16 +178,16 @@ def graphelvl(graphe):
           traite = True
           for predecessor in graphe.predecessors(node):
             if graphe.nodes[predecessor]['layer'] < 0:
-              traite=False
+              traite = False
             else:
               predecessorlvl = int(graphe.nodes[predecessor]['layer'])
-              if predecessorlvl > max :
+              if predecessorlvl > max:
                 max = predecessorlvl
-                traite=traite&True
+                traite = traite & True
           if traite:
             graphe.nodes[node]['layer'] = max + 1
             nodelayer.append(node)
-            
+  
   return graphe
 
 
@@ -226,7 +227,7 @@ def creerdebutfin(graph):
   # print(list(noeudssanssucc))
   graph.add_node('debut', layer=-1, weight=0)
   graph.add_node('fin', layer=niveaumax(graph) + 1, weight=0)
-
+  
   for node in graph.nodes():
     if graph.nodes[node]['layer'] == 0:
       graph.add_edge('debut', node)
@@ -255,7 +256,7 @@ creerdebutfin(g)
 
 
 def calculdateauplustot(graph):
-  dateauplustot: Dict = {}
+  dateauplustot: dict = {}
   while len(dateauplustot) < len(graph.nodes):
     for nod in graph.nodes():
       # print("on récupère le nom du nodes : ", nod)
@@ -278,8 +279,9 @@ def calculdateauplustot(graph):
         if traite:  # on n'inscrit la valeur du nœud dans la table que si on a traité tous ses predecesseurs !
           dateauplustot[nod] = cheminmax
           graph.nodes[nod]['dateauplustot'] = cheminmax
+          # DEBUG #
           # print("dateauplustot de : ", nod, ": ", dateauplustot[nod])
-
+  
   return graph
 
 
@@ -293,7 +295,7 @@ def calculdateauplustard(graph):
   dateauplustard['fin'] = (graph.nodes['fin']['dateauplustot'])
   graph.nodes['fin']['dateauplustard'] = graph.nodes['fin']['dateauplustot']
   print("date au plus tot fin = date au plus tard = ", dateauplustard['fin'])
-
+  
   while len(dateauplustard) < len(graph):
     for nod in graph.nodes():
       listesuccesseurs = list(graph.successors(nod))
@@ -345,7 +347,6 @@ def calculchemincritique(graph, listecritique):
     if graph.nodes[node]['margedate'] == 0:
       graph.nodes[node]['critique'] = True
       listecritique.append(node)
-    #   listecritique.append()
   return graph, listecritique
 
 
@@ -404,7 +405,6 @@ nx.draw_networkx_edges(g, pos=pos, width=3)
 # on dessine les labels :
 nx.draw_networkx_labels(g, pos=pos, horizontalalignment='center')
 
-
 labels = {nod: g.nodes[nod]['weight'] for nod in g.nodes}
 nx.draw_networkx_labels(g, pos=newpos, labels=labels)
 
@@ -430,21 +430,21 @@ def make_gantt_chart(graph):
     duree[node] = graph.nodes[node]['weight']
   for node in dict(graph.nodes.data()):
     marges[node] = graph.nodes[node]['margedate']
-  y_chemincritique=1
+  y_chemincritique = 1
   y_start = 11
   y_height = 8
   for noeud in noeudsordre:
     if graph.nodes[noeud]['margedate'] == 0:
-
+      
       pltax.broken_barh([(demarrage[noeud], duree[noeud])], (y_start, y_height), facecolors='lime')
-
+    
     else:
-
+      
       pltax.broken_barh([(demarrage[noeud], duree[noeud])], (y_start, y_height), facecolors='cyan')
       pltax.broken_barh([(findetache[noeud], marges[noeud])], (y_start, y_height), facecolors='red')
     # pltax.text(findetache[noeud] + marges[noeud] + 0.5, y_start + y_height, noeud)
-
-    pltax.text(demarrage[noeud]+(duree[noeud])/2, y_start + (y_height/2) + 1 , noeud)
+    
+    pltax.text(demarrage[noeud] + (duree[noeud]) / 2, y_start + (y_height / 2) + 1, noeud)
     y_start += 10
   pltax.set_xlim(0, max(findetache.values()) + 5)
   pltax.set_ylim(len(duree) * 10)
@@ -455,13 +455,13 @@ def make_gantt_chart(graph):
   y_labels = []
   for node in noeudsordre:
     y_labels.append(node[0])
-  #while i < len(noeudsordre) * 10:
+  # while i < len(noeudsordre) * 10:
   #  y_ticks.append(i)
   #  i += 10
-  for i in range (len(noeudsordre)+2):
-    y_ticks.append(i*10)
+  for i in range(len(noeudsordre) + 2):
+    y_ticks.append(i * 10)
     i += 1
-
+  
   pltax.set_yticks(y_ticks)
   pltax.set_yticklabels([])
   plt.title('Diagramme de Gantt, en escalier ', size=18)
