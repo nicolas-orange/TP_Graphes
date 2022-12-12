@@ -21,7 +21,6 @@ def toarray(fichier):
   myarray = np.loadtxt(fichier, delimiter=";", dtype=str)
   return myarray
 
-
 # toarray('./test.csv')
 
 # print(arr)
@@ -71,9 +70,7 @@ def flip_and_chop_array(myarray):
 
 def construitgraphe(myarray):
   nombreelements = len(myarray)
-  # print("nombre d'éléments:", nombreelements)
-
-  g = nx.DiGraph()
+  print("nombre d'éléments:", nombreelements)
 
   for i in range(nombreelements):
     # print("intégration de : ", (myarray[i][0]), (myarray[i][1]), (myarray[i][2]))
@@ -85,7 +82,7 @@ def construitgraphe(myarray):
         g.add_edge(vois, myarray[i][0])
   return g
 
-
+g = nx.DiGraph()
 g = construitgraphe(arr)
 
 
@@ -146,7 +143,7 @@ def triparpoidstotal(graphe):
 
 # nodes
 # node label and colors definition
-labels = {nod: g.nodes[nod]['weight'] for nod in g.nodes}
+
 
 
 # colors = [g.nodes[nod]['weight'] for nod in g.nodes]
@@ -166,20 +163,29 @@ labels = {nod: g.nodes[nod]['weight'] for nod in g.nodes}
 ####CALCUL des niveaux de taches sans networkx
 
 def graphelvl(graphe):
+  for node in graphe.nodes:
+    graphe.nodes[node]['layer']=-1
   nodelayer = []
   while len(list(nodelayer)) < len(graphe.nodes):
     for node in graphe.nodes:
+      traite=True
       if not list(graphe.predecessors(node)):
         graphe.nodes[node]['layer'] = 0
         nodelayer.append(node)
       else:
         max = 0
         for predecessor in graphe.predecessors(node):
-          predecessorlvl = int((graphe.nodes[predecessor]['layer']))
-          if predecessorlvl > max:
-            max = predecessorlvl
-        graphe.nodes[node]['layer'] = max + 1
-        nodelayer.append(node)
+          if graphe.nodes[predecessor]['layer'] < 0:
+            traite=False
+          else:
+            predecessorlvl = int(graphe.nodes[predecessor]['layer'])
+            if predecessorlvl > max :
+              max = predecessorlvl
+              traite=traite&True
+        if traite:
+          graphe.nodes[node]['layer'] = max + 1
+          nodelayer.append(node)
+          
   return graphe
 
 
@@ -249,7 +255,7 @@ creerdebutfin(g)
 
 def calculdateauplustot(graph):
   dateauplustot: Dict = {}
-  while len(dateauplustot) < len(graph):
+  while len(dateauplustot) < len(graph.nodes):
     for nod in graph.nodes():
       # print("on récupère le nom du nodes : ", nod)
       # print("exploration des predecesseurs", list(graph.predecessors(nod)))
@@ -319,9 +325,9 @@ calculmarges(g)
 
 listemarges = [(node, g.nodes[node]['dateauplustot'], g.nodes[node]['dateauplustard'], g.nodes[node]['margedate']) for
                node in g.nodes()]
-print("liste des marges des noeuds: ", listemarges)
+# print("liste des marges des noeuds: ", listemarges)
 # print(g.nodes['A']['layer'])
-print("affichage des noeud par layer :", sorted(g.nodes.data('layer'), key=lambda layer: layer[1]))
+# print("affichage des noeud par layer :", sorted(g.nodes.data('layer'), key=lambda layer: layer[1]))
 # print(nx.get_node_attributes(g,'layer')['A'])
 
 
@@ -377,6 +383,7 @@ pos = nx.multipartite_layout(g, subset_key="layer")
 # Décalage des positions des labels des nodes prrrrrr
 newpos = copy.deepcopy(pos)
 
+# modification de la position entre deux affichages :
 for px in list(newpos):
   # print(px)
   # print(newpos[px])
@@ -396,8 +403,8 @@ nx.draw_networkx_edges(g, pos=pos, width=3)
 # on dessine les labels :
 nx.draw_networkx_labels(g, pos=pos, horizontalalignment='center')
 
-# modification de la position entre deux affichages :
 
+labels = {nod: g.nodes[nod]['weight'] for nod in g.nodes}
 nx.draw_networkx_labels(g, pos=newpos, labels=labels)
 
 
