@@ -1,20 +1,9 @@
 import copy
-# from typing import Dict
+
 
 import numpy as np
-# import csv
 import matplotlib.pyplot as plt
 import networkx as nx
-
-
-# import array
-
-# import pprint
-
-
-# csvfile=open("./test.csv")
-# for i in csvfile:
-#    print (i)
 
 
 def toarray(fichier):  # Fonction qui prends un fichier en paramètre et qui rend un array
