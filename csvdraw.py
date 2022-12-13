@@ -59,8 +59,8 @@ def construitgraphe(myarray):  # fonction qui retourne un graphe à partir d'un 
   return g
 
 
-g = nx.DiGraph()
-g = construitgraphe(arr)
+g = nx.DiGraph()# initialisation d'un DiGraphe
+g = construitgraphe(arr) # renseignement des attributs du graphe
 
 
 # prints out the nature of our digraph:
