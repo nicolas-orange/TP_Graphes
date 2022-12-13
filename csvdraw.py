@@ -11,29 +11,15 @@ def toarray(fichier):  # Fonction qui prends un fichier en paramètre et qui ren
   return myarray
 
 
-# toarray('./test.csv')
-
-# print(arr)
-# print("l'élément 2 de la ligne 7 est:")
-# print(arr[7][2])
-
-# with open("./test.csv", 'r') as parse:
-#    sample=list(csv.reader(parse,delimiter=";"))
-
-# arr=np.array(sample)
-# print(arr)
-
-
 # Demander le nom du fichier csv à l'utilisateur defaut = test.csv
 fichier = input('Entrez le fichier à parser : (default test.csv)')
 if 'csv' not in fichier:
   fichier = 'test.csv'
 
-arr = toarray(fichier)
+arr = toarray(fichier) # appel de la fonction maison toarray
 
 
 # print(arr)
-
 # print("longueur du premier array : ", len(arr))
 
 
