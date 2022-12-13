@@ -1,5 +1,12 @@
-import copy
 
+########################### TP Graphes #########################
+# Nicolas Moreau et Baptite Carrere                            #
+# Module FUNS                                                  #
+# FCTI 2022 2023                                               #
+################################################################
+
+
+import copy
 
 import numpy as np
 import matplotlib.pyplot as plt
