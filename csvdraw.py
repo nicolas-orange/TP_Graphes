@@ -17,7 +17,7 @@ import networkx as nx
 #    print (i)
 
 
-def toarray(fichier):
+def toarray(fichier):  # Fonction qui prends un fichier en paramètre et qui rend un array
   myarray = np.loadtxt(fichier, delimiter=";", dtype=str)
   return myarray
 
@@ -34,8 +34,8 @@ def toarray(fichier):
 # arr=np.array(sample)
 # print(arr)
 
-# TODO : demander le nom du fichier à parser
-# read string from user
+
+# Demander le nom du fichier csv à l'utilisateur defaut = test.csv
 fichier = input('Entrez le fichier à parser : (default test.csv)')
 if 'csv' not in fichier:
   fichier = 'test.csv'
@@ -48,7 +48,7 @@ arr = toarray(fichier)
 # print("longueur du premier array : ", len(arr))
 
 
-def flip_and_chop_array(myarray):
+def flip_and_chop_array(myarray):  # fonction inutilisée.
   # retournement du tableau par la diagonale, les lignes deviennent les colonnes
   newarray = np.stack(myarray, axis=-1)
   
@@ -69,16 +69,16 @@ def flip_and_chop_array(myarray):
 # print(reduced_array)
 
 
-def construitgraphe(myarray):
+def construitgraphe(myarray):  # fonction qui retourne un graphe à partir d'un array, ne parse que les 3 premiers champs
   nombreelements = len(myarray)
   print("nombre d'éléments:", nombreelements)
   
   for i in range(nombreelements):
     # print("intégration de : ", (myarray[i][0]), (myarray[i][1]), (myarray[i][2]))
-    g.add_node(myarray[i][0], weight=float(myarray[i][1]))
-    if bool(myarray[i][2]):
-      liste_voisins = (myarray[i][2]).split(',')
-      for vois in liste_voisins:
+    g.add_node(myarray[i][0], weight=float(myarray[i][1]))  # on ajoute le noeud au graphe
+    if bool(myarray[i][2]):  # si on a des voisins en 3eme enregistrement
+      liste_voisins = (myarray[i][2]).split(',')  # on decoupe la liste des voisins
+      for vois in liste_voisins:  # pour chaque voisin , on crée l arrete voisin - noeud courant.
         # print("traitement de : ", myarray[i][0], ", ajout de : ", vois)
         g.add_edge(vois, myarray[i][0])
   return g
@@ -94,22 +94,6 @@ g = construitgraphe(arr)
 # prints out the complete set of edges with their attributes
 # print("listing des edges en format brut:", g.edges.data())
 
-# print("impression du degré des noeuds : non pondéré", g.degree(nbunch=None, weight=None))
-
-
-def triparnbreliens(graphe):
-  liste_avec_nbr_noeuds = list(graphe.degree(nbunch=None, weight=None))
-  return sorted(liste_avec_nbr_noeuds, key=lambda noeud: noeud[1], reverse=True)  # sort by age
-
-
-# print("Liste des noeuds par nombre d'arcs (degrés) décroissant:", triparnbreliens(g))
-
-
-def triparpoidstotal(graphe):
-  liste_avec_nbr_noeuds = list(graphe.degree(nbunch=None, weight='weight'))
-  return sorted(liste_avec_nbr_noeuds, key=lambda noeud: noeud[1], reverse=True)  # sort by age
-
-
 # list the neighbors of each node from our digraph, following directions:
 # print("descendants de : ", [(n, ":", list(g.out_edges(n))) for n in g.nodes()])
 
@@ -123,43 +107,11 @@ def triparpoidstotal(graphe):
 
 # print("re-affichage des nodes", g.nodes.data())
 
-# calcul_niveaux(g)
-
-
-# print("re-affichage des nodes")
-# print(g.nodes.data())
-
 # print("re-affichage des noms et des poids des nodes")
 # print(nx.get_node_attributes(g, 'weight'))
 
-# print("calcul des niveaux:", calcul_niveaux(g))
-
 # Compute the degree of every node: degrees
 # degrees = [len(list(g.neighbors(n))) for n in g.nodes()]
-
-# Print the degrees
-# print("affichage des degrés des noeud:", degrees)
-
-# Le tableau est maintenant construit, on peut attaquer l'exploitation des données... mais d'abord, un petit tableau ?
-
-
-# nodes
-# node label and colors definition
-
-
-# colors = [g.nodes[nod]['weight'] for nod in g.nodes]
-
-# pos = nx.spring_layout(g, seed=13, k=1.666)  # positions for all nodes - seed for reproducibility
-# pos = nx.nx_pydot.graphviz_layout(g)
-
-
-# nx.draw_networkx_nodes(g, pos, node_size=500)
-
-# edges : the following two examples need to prepare a liste of large (elarge) and one of small (esmall) edges
-# nx.draw_networkx_edges(g, pos, edgelist=elarge, width=6)
-# nx.draw_networkx_edges(g, pos, edgelist=esmall, width=6, alpha=0.5, edge_color="b", style="dashed")
-# pos=nx.spring_layout(g, seed=13, k=1.666)
-
 
 ####CALCUL des niveaux de taches sans networkx
 
@@ -191,25 +143,31 @@ def graphelvl(graphe):
   return graphe
 
 
+# appel de la fonction qui ajoute l'attribut 'layer' aux noeuds du graphe.
 graphelvl(g)
 
-'''
-# Compute the multipartite_layout using the "layer" node attribute
-for layer, nodes in enumerate(nx.topological_generations(g)):
-  # `multipartite_layout` expects the layer as a node attribute, so add the
-  # numeric layer value as a node attribute
-  for node in nodes:
-    g.nodes[node]['layer'] = layer
 
-'''
+### Calcul des niveaux des taches avec networkx, fonction abandonnée ###
+def graphelayer(graphe):
+  for layer, nodes in enumerate(nx.topological_generations(graphe)):
+    # `multipartite_layout` expects the layer as a node attribute, so add the
+    # numeric layer value as a node attribute
+    for node in nodes:
+      graphe.nodes[node]['layer'] = layer
+  return graphe
 
 
-def niveaumax(graph):
-  maxlayer = 1
-  # for layer in g.nodes.data('layer'): # ajout d'un début et d'une fin ...
-  listlayer = [(graph.nodes[node]['layer']) for node in graph.nodes()]
+## comparaison des resultats entre la méthode networkx et la méthode maison :
+# glayer=copy.deepcopy(g)
+# graphelayer(glayer)
+# print(list(glayer.nodes.data()),list(g.nodes.data()))
+
+
+def niveaumax(graph):  # fonction qui calcule le niveau max du graphe initial
+  
+  listlayer = [(graph.nodes[node]['layer']) for node in graph.nodes()]  # on liste les niveaux présents
   # print("liste des niveaux des noeuds : ", listlayer)
-  maxlayer = max(listlayer)
+  maxlayer = max(listlayer)  # on prend le max de la liste (numéroté de 0 à N)
   return maxlayer
 
 
@@ -220,49 +178,39 @@ print("nombre de niveaux de g : ", niveaumax(g) + 1)
 nbreniveauxgraphinitial = niveaumax(g)
 
 
-# TODO afficher debut et fin avec une couleur différente
-
-def creerdebutfin(graph):
-  noeudssanssucc = [nod for nod in g.nodes if not list(graph.successors(nod))]
+def creerdebutfin(graph):  # pour pouvoir calculer le flow d'un bout a l autre, on ajoute debut et fin.
+  noeudssanssucc = [nod for nod in g.nodes if not list(graph.successors(nod))]  # liste des noeuds sans successeur
   # print(list(noeudssanssucc))
-  graph.add_node('debut', layer=-1, weight=0)
-  graph.add_node('fin', layer=niveaumax(graph) + 1, weight=0)
+  graph.add_node('debut', layer=-1, weight=0)  # on ajoute le début avec un layer -1 pour etre avant les premiers noeuds
+  graph.add_node('fin', layer=niveaumax(graph) + 1, weight=0)  # la fin est après le niveau le plus haut
   
   for node in graph.nodes():
     if graph.nodes[node]['layer'] == 0:
-      graph.add_edge('debut', node)
+      graph.add_edge('debut', node)  # on relie les noeuds de niveau 0 au début
   for lastnode in noeudssanssucc:
-    graph.add_edge(lastnode, 'fin')
+    graph.add_edge(lastnode, 'fin')  # on relie les noeuds sans successeurs à la fin, Quel que soit le niveau
   return graph
 
 
-creerdebutfin(g)
+creerdebutfin(g)  # appel de la fonction pour ajouter debut et fin à 'g'
 
 
 # print("affichage des nodes avec ajout des liens debut fin : ", g.edges())
-
-# calcul de la date au plus tot
-
-# print("tentative d affichage du chemin le plus court en partant de 'B' (les arcs ont tous un poids de 1) :" , nx.shortest_path(g)['B'])
-# print("tentative d affichage du pagerank : ", nx.pagerank(g))
-
 
 # print("exploration des poids : ", list(g.nodes.data('weight')))
 
 # print("prédécesseurs de: ", [(nod, ":", list(g.predecessors(nod))) for nod in g.nodes()])
 
-
 # dictpredecesseurs['D'] = list(g.predecessors('D'))
 
 
-def calculdateauplustot(graph):
-  dateauplustot: dict = {}
-  while len(dateauplustot) < len(graph.nodes):
+def calculdateauplustot(graph):  # fonction de calcul des dates au plus tot
+  dateauplustot: dict = {}  # un dictionnaire des dates au plus tot
+  while len(dateauplustot) < len(graph.nodes):  # tant qu'on a pas autant de dates que de noeuds, on boucle !
     for nod in graph.nodes():
       # print("on récupère le nom du nodes : ", nod)
-      # print("exploration des predecesseurs", list(graph.predecessors(nod)))
-      listepredecesseurs = list(graph.predecessors(nod))
-      if nod not in dateauplustot:
+      if nod not in dateauplustot:  # si on a pas déjà traité le noeud :
+        listepredecesseurs = list(graph.predecessors(nod))  # on construit une liste des predecesseur du noeud courant
         # print("on traitre le noeud : ", nod, "type : ", type(nod))
         cheminmax = 0  # on initialise le cheminmax à 0 pour les noeuds du rang 0 qui n'ont pas d'antécédents
         traite = True  # on initialise une variable qui suppose qu'on a tous les antécédents dispos
@@ -271,132 +219,111 @@ def calculdateauplustot(graph):
           if pred in dateauplustot:  # si le predecesseurs à bien une date, on traite
             #  print("noeud : ", nod, "predecesseur : ",pred)
             # affichage du predecesseur en cours de traitement.
-            cheminmax = max(cheminmax, (dateauplustot[pred] + graph.nodes.data('weight')[
-              pred]))  # le chemin max , c'est le max entre (la plus grosse valeur connue)
-            # et (la  valeur en chemin du predecesseur qu'on teste + son poids)
+            cheminmax = max(cheminmax, (dateauplustot[pred] + graph.nodes.data('weight')[pred]))
+            # le chemin max, c'est le max entre (la plus grosse valeur connue)
+            # et (la date au plus tot du predecesseur qu'on teste + son poids)
           else:  # si on trouve un predecesseur qui n'a pas de date au plus tot, on annule tout !
             traite = False
         if traite:  # on n'inscrit la valeur du nœud dans la table que si on a traité tous ses predecesseurs !
-          dateauplustot[nod] = cheminmax
-          graph.nodes[nod]['dateauplustot'] = cheminmax
+          dateauplustot[nod] = cheminmax  # on inscrit le noeud dans la table des noeuds traités
+          graph.nodes[nod]['dateauplustot'] = cheminmax  # on ajoute un attribut au graph pour ce noeud
           # DEBUG #
           # print("dateauplustot de : ", nod, ": ", dateauplustot[nod])
   
   return graph
 
 
-calculdateauplustot(g)
+calculdateauplustot(g)  # appel de la fonction calculdateauplustot pour 'g'
 
 
-def calculdateauplustard(graph):
-  listesuccesseurs = []
-  dateauplustard = {}
-  # dateauplustard['fin'] = calculdateauplustot(graph)['fin']
-  dateauplustard['fin'] = (graph.nodes['fin']['dateauplustot'])
-  graph.nodes['fin']['dateauplustard'] = graph.nodes['fin']['dateauplustot']
+def calculdateauplustard(graph):  # definition de la fonction dateauplustard
+  listesuccesseurs = []  # on initialise une liste de successeurs
+  dateauplustard = {}  # un dictionnaire des dates au plus tard
+  dateauplustard['fin'] = graph.nodes['fin'][
+    'dateauplustot']  # par definition, la fin est sur le chemin critique. date au plus tot = date au plus tard.
+  graph.nodes['fin']['dateauplustard'] = graph.nodes['fin']['dateauplustot']  # et on l'enregistre dans le graphe
   print("date au plus tot fin = date au plus tard = ", dateauplustard['fin'])
   
-  while len(dateauplustard) < len(graph):
-    for nod in graph.nodes():
-      listesuccesseurs = list(graph.successors(nod))
-      if nod not in dateauplustard:
-        mindepuisfin = dateauplustard['fin']
-        traite = True
-        for succ in listesuccesseurs:
-          if succ in dateauplustard:
+  while len(dateauplustard) < len(graph):  # tant qu'on a pas tout traité
+    for nod in graph.nodes():  # on boucle sur tous les noeuds
+      if nod not in dateauplustard:  # si on n'a pas déjà traité
+        listesuccesseurs = list(graph.successors(nod))  # on liste les successeurs
+        mindepuisfin = dateauplustard['fin']  # combien au max depuis la fin ?
+        traite = True  # on suppose qu'on va pouvoir traiter
+        for succ in listesuccesseurs:  # parmis les successseurs
+          if succ in dateauplustard:  # si on a déjà sa date au plus tard ...
             mindepuisfin = min(mindepuisfin, (dateauplustard[succ] - graph.nodes.data('weight')[nod]))
+            # la date au plus tard, c'est le min entre le meilleur min,
+            # et la date au plus tard du successeur qu'on teste moins le poids du noeud courant
           else:  # si on trouve un successeur qui n'a pas de date au plus tard, on annule tout !
             traite = False
         if traite:  # on n'inscrit la valeur du nœud dans la table que si on a traité tous ses predecesseurs !
-          dateauplustard[nod] = mindepuisfin
-          graph.nodes[nod]['dateauplustard'] = mindepuisfin
+          dateauplustard[nod] = mindepuisfin  # on enregistre le noeud dans la liste des dates au plus tard
+          graph.nodes[nod]['dateauplustard'] = mindepuisfin  # et on inscrit l'info dans le graph pour le noeud courant
           # print (graph.nodes[nod]['dateauplustard'])
           # print("dateauplustard de : ", nod, ": ", dateauplustard[nod])
   return graph
 
 
-calculdateauplustard(g)
+calculdateauplustard(g)  # appel de la fonction dates au plus tard pour 'g'
 
 
-def calculmarges(graph):
-  for nod in g.nodes():
+def calculmarges(graph):  # fonction du calcul des marges
+  for nod in g.nodes():  # on parcours le noeuds
     graph.nodes[nod]['margedate'] = (graph.nodes[nod]['dateauplustard'] - graph.nodes[nod]['dateauplustot'])
+    # la marge, c'est date au plus tard - date au plus tot, zou, direct dans le graph !
   return graph
 
 
-calculmarges(g)
+calculmarges(g)  # hop la
 
+# DEBUG #
 listemarges = [(node, g.nodes[node]['dateauplustot'], g.nodes[node]['dateauplustard'], g.nodes[node]['margedate']) for
-               node in g.nodes()]
-# print("liste des marges des noeuds: ", listemarges)
-# print(g.nodes['A']['layer'])
+               node in g.nodes()]  #
+print("liste des marges des noeuds: ", listemarges)
+
 # print("affichage des noeud par layer :", sorted(g.nodes.data('layer'), key=lambda layer: layer[1]))
-# print(nx.get_node_attributes(g,'layer')['A'])
+# print(nx.get_node_attributes(g,'layer'))
 
 
-cheminecritique = []
-
-
-### PARCOURS d'un dict g par double index node et layer, trié par le deuxieme champs de l'attribut 'layer'
+## DEBUG ##
+# PARCOURS d'un dict g par double index node et layer, trié par le deuxieme champs de l'attribut 'layer'
 # for nodename, layer in sorted(g.nodes.data('layer'), key=lambda layer: layer[1]):
 #   print(nodename)
 
 
+cheminecritique = []  # initialisation d'un tableau des chemins critiques, dans l'ordre des layers du graphe
+
+
 def calculchemincritique(graph, listecritique):
-  for node, layer in sorted(g.nodes.data('layer'), key=lambda layer: layer[1]):
-    if graph.nodes[node]['margedate'] == 0:
-      graph.nodes[node]['critique'] = True
-      listecritique.append(node)
+  # fonction qui va renseigner si un noeud est dans le chemin critique, et en rendre la liste
+  for node, layer in sorted(g.nodes.data('layer'),
+                            key=lambda layer: layer[1]):  # on parcours les noeuds dans l'ordre des layers
+    if graph.nodes[node]['margedate'] == 0:  # si la marge est nulle
+      graph.nodes[node]['critique'] = True  # on inscrit le chemin critique dans les infos du noeud
+      listecritique.append(node)  # et on le rajoute à la liste des candidats
   return graph, listecritique
 
 
 calculchemincritique(g, cheminecritique)
+# on appelle la fonction qui renseigne le graph et le tableau avec le chemin critique
 
 print("noeuds éligibles au chemin critique :", cheminecritique)
 
-# print(list(g.nodes()))
-
-# listedates= [(node, g.nodes[node]['dateauplustard']) for node in g.nodes()]
-# print (listedates)
-
-
-# print("Affichage des dates au plus tot et date au plus tard du graphe", listedate)
-
 ###################################PARTIE AFFICHAGE################################
 
-# calcul des positions en utilisant le layer multi
+# calcul des positions en utilisant le layer multi qui exploite le champs layer ajouté aux noeuds du graphe
 pos = nx.multipartite_layout(g, subset_key="layer")
-# this one is more straightforward
-
-# affiche les noeuds et leur nom
-# nx.draw_networkx_nodes(g, with_labels=True, labels=labels, node_color=colors)
-
-# node labels
-# nx.draw_networkx_labels(g, pos)
-
-# edge weight labels
-# edge_labels = nx.get_edge_attributes(g, "weight")
-# edge_labels = nx.draw_networkx_labels(g,pos=nx.spring_layout(g))
-# nx.draw_networkx_edge_labels(g, pos, edge_labels)
-# nx.draw_networkx_edge_labels(g, edge_labels)
 
 # print("liste des positions: ")
 # print(list(pos.items()))
-# Décalage des positions des labels des nodes prrrrrr
-newpos = copy.deepcopy(pos)
 
+# Décalage des positions des labels des nodes pour afficher les poids au dessus
 # modification de la position entre deux affichages :
+newpos = copy.deepcopy(pos)
 for px in list(newpos):
-  # print(px)
-  # print(newpos[px])
-  # print(px[1][0])
-  # print(px[1][1])
-  # newpos[px][0] = newpos[px][0] -0.1
-  newpos[px][1] = newpos[px][1] + 0.05
+  newpos[px][1] = newpos[px][1] + 0.05  # ajout de 0.05 en y à la pos des poids
 
-# print("liste des positions: ", list(pos.items()))
-
-# print("type de pos:", type(pos))
 # print("nouvelle liste de positions: ",list(newpos.items()))
 
 # on dessine les noeuds et les arcs:
@@ -405,66 +332,57 @@ nx.draw_networkx_edges(g, pos=pos, width=3)
 # on dessine les labels :
 nx.draw_networkx_labels(g, pos=pos, horizontalalignment='center')
 
-labels = {nod: g.nodes[nod]['weight'] for nod in g.nodes}
-nx.draw_networkx_labels(g, pos=newpos, labels=labels)
+labels = {nod: g.nodes[nod]['weight'] for nod in g.nodes}  # on prepare une liste des labels des poids
+nx.draw_networkx_labels(g, pos=newpos, labels=labels)  # et on les affiche avec les pos décalées au dessus du noeud
 
 
-# nx.draw_networkx_edge_labels(g, pos=pos)
-
-# print(sorted(g.nodes.data('dateauplustot'), key=lambda date: date[1]))
-# for nodename, layer in sorted(g.nodes.data('layer'), key=lambda layer: layer[1]):
-
+# preparation de l'affichage du GANTT à partir d'un modèle .
 def make_gantt_chart(graph):
-  fig, pltax = plt.subplots()
-  noeudsordre = {}
-  findetache = {}
-  duree = {}
-  marges = {}
-  demarrage = graph.nodes.data('dateauplustot')
+  fig, pltax = plt.subplots()  # on cree un affichage séparé
+  noeudsordre = {}  # un dict des noeuds dans l'ordre
+  findetache = {}  # un dict des fins de taches (debut+duree)
+  duree = {}  # un dict des durees
+  marges = {}  # un dict des marges
+  demarrage = graph.nodes.data('dateauplustot')  # un dict des marges au plus tot
   for node in dict(sorted(graph.nodes.data('dateauplustot'), key=lambda date: date[1])):
-    if ('fin' not in node) and ('debut' not in node):
-      noeudsordre[node] = graph.nodes[node]['dateauplustot']
-  for node in dict(graph.nodes.data()):
+    # on boucle sur les noeuds dans l'ordre d'apparition
+    if ('fin' not in node) and ('debut' not in node):  # pas d'affichage de debut et fin dans le gantt
+      noeudsordre[node] = graph.nodes[node]['dateauplustot']  # la liste des noeuds dans l'ordre des dates au plus tot
+  for node in dict(graph.nodes.data()):  # la fin c'est le debut + duree
     findetache[node] = graph.nodes[node]['weight'] + graph.nodes[node]['dateauplustot']
-  for node in dict(graph.nodes.data()):
+  for node in dict(graph.nodes.data()):  # la duree c'est le champs 'weight'
     duree[node] = graph.nodes[node]['weight']
-  for node in dict(graph.nodes.data()):
+  for node in dict(graph.nodes.data()):  # la marge c'est la marge
     marges[node] = graph.nodes[node]['margedate']
-  y_chemincritique = 1
-  y_start = 11
-  y_height = 8
-  for noeud in noeudsordre:
-    if graph.nodes[noeud]['margedate'] == 0:
-      
-      pltax.broken_barh([(demarrage[noeud], duree[noeud])], (y_start, y_height), facecolors='lime')
-    
+  y_chemincritique = 1  # si on veut aligner le chemin critique sur la premiere ligne, mais c'est moche
+  y_start = 11 # on evite la premiere ligne pour aerer le tableau
+  y_height = 8 # chaque barre fera 8 pixels de haut sur un emplacement de 10
+  for noeud in noeudsordre: # dans l'ordre des dates au plus tot
+    if graph.nodes[noeud]['margedate'] == 0: # si chemin critique
+      pltax.broken_barh([(demarrage[noeud], duree[noeud])], (y_start, y_height), facecolors='lime') # vert petant pour le chemin critique
     else:
-      
-      pltax.broken_barh([(demarrage[noeud], duree[noeud])], (y_start, y_height), facecolors='cyan')
-      pltax.broken_barh([(findetache[noeud], marges[noeud])], (y_start, y_height), facecolors='red')
+      pltax.broken_barh([(demarrage[noeud], duree[noeud])], (y_start, y_height), facecolors='cyan') # cyan pour les autres
+      pltax.broken_barh([(findetache[noeud], marges[noeud])], (y_start, y_height), facecolors='red') # la marge apparait apres la fin en rouge
     # pltax.text(findetache[noeud] + marges[noeud] + 0.5, y_start + y_height, noeud)
     
-    pltax.text(demarrage[noeud] + (duree[noeud]) / 2, y_start + (y_height / 2) + 1, noeud)
-    y_start += 10
-  pltax.set_xlim(0, max(findetache.values()) + 5)
-  pltax.set_ylim(len(duree) * 10)
-  pltax.set_xlabel('Temps')
-  pltax.set_ylabel('Taches')
+    pltax.text(demarrage[noeud] + (duree[noeud]) / 2, y_start + (y_height / 2) + 1, noeud) # on rappelle le nom de la tache : noeud
+    y_start += 10 # on decale de 10 pixels pour la tache suivante
+  
+  pltax.set_xlim(0, max(findetache.values()) + 5) # dimension de 'affichage en fonction de la tache la plus tardive
+  pltax.set_ylim(len(duree) * 10)   # en hauteur c'est le nombre de taches , y compris debut en fin pour avoir de la place
+  pltax.set_xlabel('Temps') # legende X
+  pltax.set_ylabel('Taches') # legende Y
   i = 5
   y_ticks = []
   y_labels = []
-  for node in noeudsordre:
-    y_labels.append(node[0])
-  # while i < len(noeudsordre) * 10:
-  #  y_ticks.append(i)
-  #  i += 10
+ 
   for i in range(len(noeudsordre) + 2):
-    y_ticks.append(i * 10)
+    y_ticks.append(i * 10)  # affichage des séparateurs de l'axe des ordonnées
     i += 1
   
-  pltax.set_yticks(y_ticks)
-  pltax.set_yticklabels([])
-  plt.title('Diagramme de Gantt, en escalier ', size=18)
+  pltax.set_yticks(y_ticks) # tick tick tick
+  pltax.set_yticklabels([]) # pas de nom
+  plt.title('Diagramme de Gantt, en escalier ', size=18) # titre du gantt
   plt.tick_params(
     axis='both',  # changes apply to the y-axis
     which='both',  # both major and minor ticks are affected
@@ -473,16 +391,9 @@ def make_gantt_chart(graph):
   #
 
 
-# preparation de l'affichage secondaire ordonné:
-# ax = plt.subplots()
-# ax.margins(0.08)
-# plt.axis("on")
-# plt.tight_layout()
-
-
 make_gantt_chart(g)
 
-plt.show()
+plt.show() # affichage général avec matplot
 '''
 
 shrtpath = nx.shortest_path(g, source='debut', target='fin')
