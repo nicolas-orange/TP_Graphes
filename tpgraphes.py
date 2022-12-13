@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 import networkx as nx
 
 
-def toarray(fichier):  # Fonction qui prends un fichier en paramètre et qui rend un array
+def toarray(fichier):  # Fonction qui prend un fichier en paramètre et qui rend un array
   myarray = np.loadtxt(fichier, delimiter=";", dtype=str)
   return myarray
 
